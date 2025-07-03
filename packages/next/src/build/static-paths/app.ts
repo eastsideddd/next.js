@@ -266,8 +266,8 @@ interface TrieNode {
  * is a "shell" for more specific routes.
  *
  * A route is considered a shell if it has child routes in the Trie. For example,
- * if we have two routes, `/blog/[slug]` and `/blog/first-post`, the route for
- * `/blog/[slug]` is a shell because it has a more specific child.
+ * if we have two routes, `/blog/first-post` and `/blog/[slug]`, the route for
+ * `/blog/[slug]` is a shell because `/blog/first-post` is a more specific concrete route.
  *
  * @param prerenderedRoutes - The prerendered routes.
  * @param routeParamKeys - The keys of the route parameters.
@@ -373,13 +373,13 @@ export function assignErrorIfEmpty(
         // if either of the following conditions is met:
         // 1. `hasChildren` is true: This node has further concrete parameter children.
         //    This means the current route is a parent to more specific routes (e.g.,
-        //    `/blog/[slug]` is a shell if `/blog/first-post` exists).
+        //    `/blog/[slug]` is a shell when concrete routes like `/blog/first-post` exist).
         // OR
         // 2. `route.fallbackRouteParams.length > minFallbacks`: This route has
         //    more fallback parameters than another route at the same Trie node.
         //    This implies the current route is a more general version (a shell)
         //    compared to a more specific route that has fewer fallback parameters
-        //    (e.g., `/[id]/[...slug]` is a shell for `/[id]`).
+        //    (e.g., `/1234/[...slug]` is a shell for `/[id]/[...slug]`).
         if (
           hasChildren ||
           (route.fallbackRouteParams &&
