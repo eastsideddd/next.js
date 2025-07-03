@@ -7,7 +7,7 @@ import {
 import type { PrerenderedRoute } from './types'
 
 describe('assignErrorIfEmpty', () => {
-  it('should assign throwOnEmptyStaticShell false for a static route', () => {
+  it('should assign throwOnEmptyStaticShell true for a static route with no children', () => {
     const prerenderedRoutes: PrerenderedRoute[] = [
       {
         params: {},
@@ -25,7 +25,7 @@ describe('assignErrorIfEmpty', () => {
     expect(prerenderedRoutes[0].throwOnEmptyStaticShell).toBe(true)
   })
 
-  it('should assign throwOnEmptyStaticShell to the prerendered routes', () => {
+  it('should assign throwOnEmptyStaticShell based on route hierarchy', () => {
     const prerenderedRoutes: PrerenderedRoute[] = [
       {
         params: {},
@@ -163,7 +163,7 @@ describe('assignErrorIfEmpty', () => {
     expect(prerenderedRoutes).toEqual([])
   })
 
-  it('should handle blog/[slug] as shell for blog/first-post (from docs example)', () => {
+  it('should handle blog/[slug] not throwing when concrete routes exist (from docs example)', () => {
     const prerenderedRoutes: PrerenderedRoute[] = [
       {
         params: {},
@@ -196,12 +196,12 @@ describe('assignErrorIfEmpty', () => {
 
     assignErrorIfEmpty(prerenderedRoutes, ['slug'])
 
-    expect(prerenderedRoutes[0].throwOnEmptyStaticShell).toBe(false) // Shell for concrete routes
-    expect(prerenderedRoutes[1].throwOnEmptyStaticShell).toBe(true) // Concrete route
-    expect(prerenderedRoutes[2].throwOnEmptyStaticShell).toBe(true) // Concrete route
+    expect(prerenderedRoutes[0].throwOnEmptyStaticShell).toBe(false) // Should not throw - has concrete children
+    expect(prerenderedRoutes[1].throwOnEmptyStaticShell).toBe(true) // Should throw - concrete route
+    expect(prerenderedRoutes[2].throwOnEmptyStaticShell).toBe(true) // Should throw - concrete route
   })
 
-  it('should handle [id]/[...slug] with concrete id values (from docs example)', () => {
+  it('should handle catch-all routes with different fallback parameter counts (from docs example)', () => {
     const prerenderedRoutes: PrerenderedRoute[] = [
       {
         params: {},
@@ -234,12 +234,12 @@ describe('assignErrorIfEmpty', () => {
 
     assignErrorIfEmpty(prerenderedRoutes, ['id', 'slug'])
 
-    expect(prerenderedRoutes[0].throwOnEmptyStaticShell).toBe(false) // Shell: /[id]/[...slug]
-    expect(prerenderedRoutes[1].throwOnEmptyStaticShell).toBe(false) // Shell: /1234/[...slug]
-    expect(prerenderedRoutes[2].throwOnEmptyStaticShell).toBe(true) // Concrete: /1234/about/us
+    expect(prerenderedRoutes[0].throwOnEmptyStaticShell).toBe(false) // Should not throw - has children
+    expect(prerenderedRoutes[1].throwOnEmptyStaticShell).toBe(false) // Should not throw - has children
+    expect(prerenderedRoutes[2].throwOnEmptyStaticShell).toBe(true) // Should throw - concrete route
   })
 
-  it('should handle multiple shell levels with different parameter depths', () => {
+  it('should handle nested routes with multiple parameter depths', () => {
     const prerenderedRoutes: PrerenderedRoute[] = [
       {
         params: {},
@@ -285,7 +285,7 @@ describe('assignErrorIfEmpty', () => {
 
     assignErrorIfEmpty(prerenderedRoutes, ['category', 'subcategory', 'item'])
 
-    // All except the last one should be shells
+    // All except the last one should not throw on empty static shell
     expect(prerenderedRoutes[0].throwOnEmptyStaticShell).toBe(false)
     expect(prerenderedRoutes[1].throwOnEmptyStaticShell).toBe(false)
     expect(prerenderedRoutes[2].throwOnEmptyStaticShell).toBe(false)
@@ -316,7 +316,7 @@ describe('assignErrorIfEmpty', () => {
 
     assignErrorIfEmpty(prerenderedRoutes, ['locale', 'segments'])
 
-    // The route with more fallback params should be a shell
+    // The route with more fallback params should not throw on empty static shell
     expect(prerenderedRoutes[0].throwOnEmptyStaticShell).toBe(false)
     expect(prerenderedRoutes[1].throwOnEmptyStaticShell).toBe(true)
   })

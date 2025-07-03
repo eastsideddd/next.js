@@ -262,12 +262,12 @@ interface TrieNode {
 
 /**
  * Assigns the throwOnEmptyStaticShell property to each of the prerendered routes.
- * This function uses a Trie data structure to efficiently determine if a route
- * is a "shell" for more specific routes.
+ * This function uses a Trie data structure to efficiently determine whether each route
+ * should throw an error when its static shell is empty.
  *
- * A route is considered a shell if it has child routes in the Trie. For example,
+ * A route should not throw on empty static shell if it has child routes in the Trie. For example,
  * if we have two routes, `/blog/first-post` and `/blog/[slug]`, the route for
- * `/blog/[slug]` is a shell because `/blog/first-post` is a more specific concrete route.
+ * `/blog/[slug]` should not throw because `/blog/first-post` is a more specific concrete route.
  *
  * @param prerenderedRoutes - The prerendered routes.
  * @param routeParamKeys - The keys of the route parameters.
@@ -355,7 +355,7 @@ export function assignErrorIfEmpty(
     if (node.routes.length > 0) {
       // Determine the minimum number of fallback parameters among all routes
       // that are associated with this current Trie node. This is used to
-      // identify if a route is a shell for another route *at the same level*
+      // identify if a route should not throw on empty static shell relative to another route *at the same level*
       // of concrete parameters, but with fewer fallback parameters.
       let minFallbacks = Infinity
       for (const r of node.routes) {
@@ -369,25 +369,26 @@ export function assignErrorIfEmpty(
 
       // Now, for each `PrerenderedRoute` associated with this node:
       for (const route of node.routes) {
-        // A route is considered a "shell" (and thus `throwOnEmptyStaticShell` should be `false`)
-        // if either of the following conditions is met:
+        // A route is ok not to throw on an empty static shell (and thus
+        // `throwOnEmptyStaticShell` should be `false`) if either of the
+        // following conditions is met:
         // 1. `hasChildren` is true: This node has further concrete parameter children.
         //    This means the current route is a parent to more specific routes (e.g.,
-        //    `/blog/[slug]` is a shell when concrete routes like `/blog/first-post` exist).
+        //    `/blog/[slug]` should not throw when concrete routes like `/blog/first-post` exist).
         // OR
         // 2. `route.fallbackRouteParams.length > minFallbacks`: This route has
         //    more fallback parameters than another route at the same Trie node.
-        //    This implies the current route is a more general version (a shell)
+        //    This implies the current route is a more general version that should not throw
         //    compared to a more specific route that has fewer fallback parameters
-        //    (e.g., `/1234/[...slug]` is a shell for `/[id]/[...slug]`).
+        //    (e.g., `/1234/[...slug]` should not throw relative to `/[id]/[...slug]`).
         if (
           hasChildren ||
           (route.fallbackRouteParams &&
             route.fallbackRouteParams.length > minFallbacks)
         ) {
-          route.throwOnEmptyStaticShell = false // It's a shell, so it should not throw if its static shell is empty.
+          route.throwOnEmptyStaticShell = false // Should not throw on empty static shell.
         } else {
-          route.throwOnEmptyStaticShell = true // It's not a shell, so it should throw if its static shell is empty.
+          route.throwOnEmptyStaticShell = true // Should throw on empty static shell.
         }
       }
     }
@@ -625,7 +626,7 @@ export async function buildAppStaticPaths({
   if (hadAllParamsGenerated || isRoutePPREnabled) {
     if (isRoutePPREnabled) {
       // Discover all unique combinations of the rootParams so we can generate
-      // shells for each of them if they're available.
+      // routes that won't throw on empty static shell for each of them if they're available.
       routeParams.unshift(
         ...filterUniqueRootParamsCombinations(rootParamKeys, routeParams)
       )
