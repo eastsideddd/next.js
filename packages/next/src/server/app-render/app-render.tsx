@@ -2647,7 +2647,7 @@ async function spawnDynamicValidationInDev(
                   const componentStack = errorInfo.componentStack
                   if (typeof componentStack === 'string') {
                     trackAllowedDynamicAccess(
-                      workStore.route,
+                      workStore,
                       componentStack,
                       dynamicValidation,
                       clientDynamicTracking
@@ -3273,7 +3273,7 @@ async function prerenderToStream(
                     ).componentStack
                     if (typeof componentStack === 'string') {
                       trackAllowedDynamicAccess(
-                        workStore.route,
+                        workStore,
                         componentStack,
                         dynamicValidation,
                         clientDynamicTracking
